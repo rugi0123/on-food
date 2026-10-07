@@ -1,0 +1,6 @@
+{
+  "name": "온하루 생식 - 하루한잔 간편한 한끼",
+  "description": "국내산 50가지 곡물과 채소로 정성껏 담아낸 순수 생식. 물이나 우유에 간편하게 타 마시는 든든한 아침 한 끼.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

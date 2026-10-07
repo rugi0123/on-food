@@ -1,0 +1,100 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        request.auth.token.email == 'gongjurugi@gmail.com' &&
+        request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 64 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll([
+        'orderId',
+        'customerName',
+        'phone',
+        'address',
+        'productName',
+        'quantity',
+        'totalPrice',
+        'paymentMethod',
+        'status',
+        'createdAt'
+      ]) &&
+      data.keys().hasOnly([
+        'orderId',
+        'customerName',
+        'phone',
+        'address',
+        'detailAddress',
+        'deliveryMemo',
+        'productName',
+        'quantity',
+        'totalPrice',
+        'paymentMethod',
+        'status',
+        'trackingNumber',
+        'createdAt'
+      ]) &&
+      data.orderId is string && data.orderId.size() <= 64 &&
+      data.customerName is string && data.customerName.size() >= 1 && data.customerName.size() <= 50 &&
+      data.phone is string && data.phone.size() >= 8 && data.phone.size() <= 30 &&
+      data.address is string && data.address.size() >= 2 && data.address.size() <= 200 &&
+      (!('detailAddress' in data) || (data.detailAddress is string && data.detailAddress.size() <= 100)) &&
+      (!('deliveryMemo' in data) || (data.deliveryMemo is string && data.deliveryMemo.size() <= 100)) &&
+      data.productName is string && data.productName.size() >= 1 && data.productName.size() <= 100 &&
+      data.quantity is number && data.quantity >= 1 && data.quantity <= 100 &&
+      data.totalPrice is number && data.totalPrice >= 0 && data.totalPrice <= 10000000 &&
+      data.paymentMethod in ['card', 'transfer', 'easyPay', 'kakaopay', 'naverpay', 'tosspay'] &&
+      data.status in ['접수완료', '배송준비', '배송중', '배송완료', '발송완료', '주문취소'] &&
+      (!('trackingNumber' in data) || (data.trackingNumber is string && data.trackingNumber.size() <= 50)) &&
+      data.createdAt is string && data.createdAt.size() <= 40;
+    }
+
+    // Orders Collection
+    match /orders/{orderId} {
+      // Any guest customer can place an order as long as payload matches strict schema
+      allow create: if isValidId(orderId) &&
+        isValidOrder(incoming()) &&
+        incoming().orderId == orderId &&
+        incoming().status == '접수완료';
+
+      // Customer can get their single specific receipt if they have the valid orderId
+      allow get: if isValidId(orderId);
+
+      // Only the verified store administrator can list all customer orders to protect PII
+      allow list: if isAdmin();
+
+      // Only the store administrator can update status or tracking number
+      allow update: if isAdmin() &&
+        isValidOrder(incoming()) &&
+        incoming().orderId == existing().orderId &&
+        incoming().createdAt == existing().createdAt;
+
+      // Only the store administrator can delete or cancel orders
+      allow delete: if isAdmin();
+    }
+  }
+}

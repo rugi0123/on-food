@@ -1,0 +1,97 @@
+{
+  "entities": {
+    "Order": {
+      "title": "Order",
+      "description": "Customer order record for Onharu Saengsik",
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "description": "Unique order identifier",
+          "pattern": "^OH-[a-zA-Z0-9_-]+$",
+          "maxLength": 64
+        },
+        "customerName": {
+          "type": "string",
+          "description": "Customer recipient name",
+          "minLength": 1,
+          "maxLength": 50
+        },
+        "phone": {
+          "type": "string",
+          "description": "Customer phone number",
+          "minLength": 8,
+          "maxLength": 30
+        },
+        "address": {
+          "type": "string",
+          "description": "Shipping base address",
+          "minLength": 2,
+          "maxLength": 200
+        },
+        "detailAddress": {
+          "type": "string",
+          "description": "Shipping detail address",
+          "maxLength": 100
+        },
+        "deliveryMemo": {
+          "type": "string",
+          "description": "Shipping note or memo",
+          "maxLength": 100
+        },
+        "productName": {
+          "type": "string",
+          "description": "Purchased product name",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "quantity": {
+          "type": "number",
+          "description": "Order item quantity"
+        },
+        "totalPrice": {
+          "type": "number",
+          "description": "Total order amount in KRW"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Selected payment method",
+          "enum": ["card", "transfer", "easyPay", "kakaopay", "naverpay", "tosspay"]
+        },
+        "status": {
+          "type": "string",
+          "description": "Current fulfillment status",
+          "enum": ["접수완료", "배송준비", "배송중", "배송완료", "발송완료", "주문취소"]
+        },
+        "trackingNumber": {
+          "type": "string",
+          "description": "Courier delivery tracking number",
+          "maxLength": 50
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Order creation ISO date string",
+          "maxLength": 40
+        }
+      },
+      "required": [
+        "orderId",
+        "customerName",
+        "phone",
+        "address",
+        "productName",
+        "quantity",
+        "totalPrice",
+        "paymentMethod",
+        "status",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Collection storing customer orders"
+    }
+  }
+}
